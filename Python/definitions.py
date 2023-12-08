@@ -1,71 +1,117 @@
 import numpy as np
+from typing import List
+from numpy.typing import NDArray
+
+chpf = np.clongdouble # Complex high-precision float
+
+pi = chpf(np.pi)
 
 # Pauli matrices and projector |+><+|
-x = np.array([[0, 1], [1, 0]])
-y = np.array([[0, -1j], [1j, 0]])
-z = np.array([[1, 0], [0, -1]])
-one = np.array([[1, 0], [0, 1]])
+x = np.array([[0, 1], [1, 0]], dtype=chpf)
+y = np.array([[0, -1j], [1j, 0]], dtype=chpf)
+z = np.array([[1, 0], [0, -1]], dtype=chpf)
+one = np.eye(2, dtype=chpf)
 projx = (one + x) / 2
+rcp_sqrt2 = 1 / np.sqrt(2, dtype=chpf)
+rcp_sqrt8 = 1 / np.sqrt(8, dtype=chpf)
 
 # Density matrices of pure |+> states, pure magic states and pure CCZ states
-plusstate = np.dot(np.array([[1 / np.sqrt(2)], [1 / np.sqrt(2)]]), np.array([[1 / np.sqrt(2), 1 / np.sqrt(2)]]))
-magicstate = np.dot(np.array([[1 / np.sqrt(2)], [np.exp(1j * np.pi / 4) * 1 / np.sqrt(2)]]),
-                    np.array([[1 / np.sqrt(2), np.exp(-1j * np.pi / 4) * 1 / np.sqrt(2)]]))
-CCZstate = np.dot(np.array([[1 / np.sqrt(8)], [1 / np.sqrt(8)], [1 / np.sqrt(8)], [1 / np.sqrt(8)], [1 / np.sqrt(8)],
-                            [1 / np.sqrt(8)], [1 / np.sqrt(8)], [-1 / np.sqrt(8)]]), np.array([[1 / np.sqrt(8),
-                                                                                                1 / np.sqrt(8),
-                                                                                                1 / np.sqrt(8),
-                                                                                                1 / np.sqrt(8),
-                                                                                                1 / np.sqrt(8),
-                                                                                                1 / np.sqrt(8),
-                                                                                                1 / np.sqrt(8),
-                                                                                                -1 / np.sqrt(8)]]))
+plusstate = (
+    np.array([[rcp_sqrt2], 
+              [rcp_sqrt2]]) 
+    @ 
+    np.array([[rcp_sqrt2, rcp_sqrt2]])
+)
 
 
-# Computes the tensor product of a list of matrices
-def kronecker_product(matrices):
-    res = np.kron(matrices[0], matrices[1])
-    for i in matrices[2:]:
-        res = np.kron(res, i)
+magicstate = (
+    np.array([[rcp_sqrt2], 
+              [np.exp(1j * pi / 4) * rcp_sqrt2]]) 
+    @ 
+    np.array([[rcp_sqrt2, np.exp(-1j * pi / 4) * 1 / np.sqrt(2)]])
+)
+
+CCZstate = (
+    np.array(
+        [
+            [rcp_sqrt8],
+            [rcp_sqrt8],
+            [rcp_sqrt8],
+            [rcp_sqrt8],
+            [rcp_sqrt8],
+            [rcp_sqrt8],
+            [rcp_sqrt8],
+            [-rcp_sqrt8],
+        ]
+    )
+    @
+    np.array(
+        [
+            [rcp_sqrt8, rcp_sqrt8, rcp_sqrt8, rcp_sqrt8, rcp_sqrt8, rcp_sqrt8, rcp_sqrt8, -rcp_sqrt8]
+        ]
+    ),
+)
+
+
+def tensor_product(*args) -> NDArray[chpf]:
+    """
+    Computes the tensor product of a list of matrices
+    """
+    res = args[0]
+    for mat in args[1:]:
+        res = np.kron(res, mat)
     return res
 
 
 # Density matrices of 5, 7 and 4 |+> states
-init5qubit = kronecker_product([plusstate, plusstate, plusstate, plusstate, plusstate])
-init7qubit = kronecker_product([plusstate, plusstate, plusstate, plusstate, plusstate, plusstate, plusstate])
-init4qubit = kronecker_product([plusstate, plusstate, plusstate, plusstate])
+init5qubit = tensor_product(plusstate, plusstate, plusstate, plusstate, plusstate)
+
+init7qubit = tensor_product(plusstate, plusstate, plusstate, plusstate, plusstate, plusstate, plusstate)
+init4qubit = tensor_product(plusstate, plusstate, plusstate, plusstate)
 
 # Density matrices corresponding to the ideal output state of 15-to-1, 20-to-4 and 8-to-CCZ
-ideal15to1 = kronecker_product([magicstate, plusstate, plusstate, plusstate, plusstate])
-ideal20to4 = kronecker_product([magicstate, magicstate, magicstate, magicstate, plusstate, plusstate, plusstate])
-ideal8toCCZ = kronecker_product([CCZstate, plusstate])
+ideal15to1 = tensor_product(magicstate, plusstate, plusstate, plusstate, plusstate)
+ideal20to4 = tensor_product(magicstate, magicstate, magicstate, magicstate, plusstate, plusstate, plusstate)
+ideal8toCCZ = tensor_product(CCZstate, plusstate)
 
 
-# Pauli product rotation e^(iP*phi), where the Pauli product P is specified by 'axis' and phi is the rotation angle
-def pauli_rot(axis, angle):
-    return np.cos(angle) * np.eye(2 ** len(axis)) + 1j * np.sin(angle) * kronecker_product(axis)
+def pauli_rot(axis: List[NDArray[chpf]], angle: chpf) -> NDArray[chpf]:
+    """
+    Pauli product rotation `e^(iP*phi)`, where the Pauli product `P` is specified by 'axis' and `phi` is the rotation angle
+    """
+    return np.cos(angle) * np.eye(2 ** len(axis)) + 1j * np.sin(angle) * tensor_product(*axis)
 
 
-# Applies a pi/8 Pauli product rotation specified by 'axis' with probability 1-p1-p2-p3
-# A P_(pi/2) / P_(-pi/4) / P_(pi/4) error occurs with probability p1 / p2 / p3
-def apply_rot(state, axis, p1, p2, p3):
-    return (1 - p1 - p2 - p3) * np.dot(np.dot(pauli_rot(axis, np.pi / 8), state),
-                                       pauli_rot(axis, np.pi / 8).conj().transpose()) \
-           + p1 * np.dot(np.dot(pauli_rot(axis, 5 * np.pi / 8), state),
-                         pauli_rot(axis, 5 * np.pi / 8).conj().transpose()) \
-           + p2 * np.dot(np.dot(pauli_rot(axis, -1 * np.pi / 8), state),
-                         pauli_rot(axis, -1 * np.pi / 8).conj().transpose()) \
-           + p3 * np.dot(np.dot(pauli_rot(axis, 3 * np.pi / 8), state),
-                         pauli_rot(axis, 3 * np.pi / 8).conj().transpose())
+
+def apply_rot(state: NDArray[chpf], axis: List[NDArray[chpf]], p1: chpf, p2: chpf, p3: chpf) -> NDArray[chpf]:
+    """
+    Applies a `pi/8` Pauli product rotation specified by 'axis' with probability `1-p1-p2-p3`
+    
+    A `P_(pi/2) / P_(-pi/4) / P_(pi/4)` error occurs with probability `p1 / p2 / p3`
+    """
+    rot0 = pauli_rot(axis, pi / 8)
+    rot1 = pauli_rot(axis, 5 * pi / 8)
+    rot2 = pauli_rot(axis, -1 * pi / 8)
+    rot3 = pauli_rot(axis, 3 * pi / 8)
+
+    return (
+            (1 - p1 - p2 - p3) * rot0 @ state @ rot0.conj().transpose()
+            + p1               * rot1 @ state @ rot1.conj().transpose()
+            + p2               * rot2 @ state @ rot2.conj().transpose()
+            + p3               * rot3 @ state @ rot3.conj().transpose()
+    )
+
+def apply_pauli(state: NDArray[chpf], pauli: List[NDArray[chpf]], p: float) -> NDArray[chpf]:
+    """
+    Applies a Pauli operator to a state with probability `p`
+    """
+    return (1 - p) * state + p * tensor_product(*pauli) @ state @ tensor_product(*pauli)
 
 
-# Applies a Pauli operator to a state with probability p
-def apply_pauli(state, pauli, p):
-    return (1 - p) * state + p * np.dot(np.dot(kronecker_product(pauli), state), kronecker_product(pauli))
-
-
-# Estimate of the logical error rate of a surface-code patch with code distance d and circuit-level error rate pphys
-def plog(pphys, d):
+def plog(pphys: chpf, d: int) -> chpf:
+    """
+    Estimate of the logical error rate of a surface-code patch with code distance `d` and circuit-level error rate `pphys`
+    """
     return 0.1 * (100 * pphys) ** ((d + 1) / 2)
 
 
