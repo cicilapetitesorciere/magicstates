@@ -1,2 +1,5 @@
 magicland/*
-Python/__pycache__/*
+Python/__pycache__
+Python/.mypy_cache
+Python/tmp.py
+Python/CACHEDIR.TAG

@@ -1,37 +1,36 @@
-import numpy as np
-from numpy.typing import NDArray
 from factory import OneLevelFactory
 from dataclasses import dataclass
-from scipy import optimize
+# from scipy import optimize
+import mpmath as mp
 
 from definitions import (
     z,
     one,
     projx,
     apply_rot,
-    tensor_product,
+    kron,
+    trace,
     plog,
     storage_x_5,
     storage_z_5,
     init5qubit,
-    ideal15to1,
-    chpf
+    ideal15to1
 )
 
-@dataclass
-class OneLevelFactory15To1(OneLevelFactory):
+# @dataclass
+# class OneLevelFactory15To1(OneLevelFactory):
 
-    def qubits(self) -> int:
-         return 2 * ((self.dx + 4 * self.dz) * 3 * self.dx + 2 * self.dm)
+#     def qubits(self) -> int:
+#          return 2 * ((self.dx + 4 * self.dz) * 3 * self.dx + 2 * self.dm)
     
-    def code_cycles(self) -> np.float128:
-        return np.float128(6*self.dm) / (1 - self.failure_probability)
+#     def code_cycles(self) -> np.float128:
+#         return np.float128(6*self.dm) / (1 - self.failure_probability)
 
-    def spacetime_cost(self) -> np.float128:
-        return np.float128(2 * ((self.dx + 4 * self.dz) * 3 * self.dx + 2 * self.dm) * 6 * self.dm) / (1 - self.failure_probability)
+#     def spacetime_cost(self) -> np.float128:
+#         return np.float128(2 * ((self.dx + 4 * self.dz) * 3 * self.dx + 2 * self.dm) * 6 * self.dm) / (1 - self.failure_probability)
 
 
-def one_level_15to1_state(pphys: float | chpf, dx: int, dz: int, dm: int) -> NDArray[chpf]:
+def one_level_15to1_state(pphys: float | mp.mpc, dx: int, dz: int, dm: int) -> mp.matrix:
     
     """
     Generates the output-state density matrix of the 15-to-1 protocol
@@ -41,7 +40,7 @@ def one_level_15to1_state(pphys: float | chpf, dx: int, dz: int, dm: int) -> NDA
     `dx`, `dz`, `dm`: distance for x, z, and measurement errors respectively
     """
 
-    pphys = chpf(pphys)
+    pphys = mp.mpc(pphys)
 
     # Introduce shorthand notation for logical error rate with distances dx/dz/dm
     px = plog(pphys, dx)
@@ -295,35 +294,35 @@ def one_level_15to1_state(pphys: float | chpf, dx: int, dz: int, dm: int) -> NDA
 
     return out
 
-def cost_of_one_level_15to1(pphys: float | chpf, dx: int, dz: int, dm: int):
+def cost_of_one_level_15to1(pphys: float | mp.mpc, dx: int, dz: int, dm: int):
     """
     Calculates the output error and cost of the 15-to-1 protocol with a physical error rate `pphys` and distances `dx`, `dz` and `dm`
     """
 
-    pphys = chpf(pphys)
+    pphys = mp.mpc(pphys)
 
     # Generate output state of 15-to-1 protocol
     out = one_level_15to1_state(pphys, dx, dz, dm)
 
     # Compute failure probability as the probability to measure qubits 2-5 in the |+> state
-    pfail = np.real(1 - np.trace(tensor_product(one, projx, projx, projx, projx) @ out))
+    pfail = (1 - trace(kron(one, projx, projx, projx, projx) * out)).real
 
     # Compute the density matrix of the post-selected output state, i.e., after projecting qubits 2-5 into |+>
-    outpostsel = (1 / (1 - pfail)) * tensor_product(one, projx, projx, projx, projx) @ out @ tensor_product(one, projx, projx, projx, projx).conj().transpose()
+    outpostsel = (1 / (1 - pfail)) * kron(one, projx, projx, projx, projx) * out * kron(one, projx, projx, projx, projx).transpose_conj()
 
 
     # Compute output error from the infidelity between the post-selected state and the ideal output state
-    pout = np.real(1 - np.trace(outpostsel @ ideal15to1))
+    pout = (1 - trace(outpostsel * ideal15to1)).real
 
     # Full-distance computation: determine full distance required for a 100-qubit / 10000-qubit computation
     def logerr1(d):
-       return np.float64((231 / pout) * d * plog(pphys, d) - 0.01)
+       return mp.float64((231 / pout) * d * plog(pphys, d) - 0.01)
 
     def logerr2(d):
-       return np.float64((20284 / pout) * d * plog(pphys, d) - 0.01)
+       return mp.float64((20284 / pout) * d * plog(pphys, d) - 0.01)
 
-    reqdist1 = int(2 * round(optimize.root(logerr1, 3, method="hybr").x[0] / 2) + 1)
-    reqdist2 = int(2 * round(optimize.root(logerr2, 3, method="hybr").x[0] / 2) + 1)
+    #reqdist1 = int(2 * round(optimize.root(logerr1, 3, method="hybr").x[0] / 2) + 1)
+    #reqdist2 = int(2 * round(optimize.root(logerr2, 3, method="hybr").x[0] / 2) + 1)
 
     # Print output error, failure probability, space cost, time cost and space-time cost
     print("15-to-1 with pphys=", pphys, ", dx=", dx, ", dz=", dz, ", dm=", dm, sep="")
