@@ -121,7 +121,7 @@ def apply_pauli(state: mp.matrix, pauli: List[mp.matrix], p: float) -> mp.matrix
     return (1 - p) * state + p * kron(*pauli) * state * kron(*pauli)
 
 
-def plog(pphys: mp.mpc, d: int) -> mp.mpc:
+def plog(pphys: mp.mpf, d: int) -> mp.mpc:
     """
     Estimate of the logical error rate of a surface-code patch with code distance `d` and circuit-level error rate `pphys`
     """

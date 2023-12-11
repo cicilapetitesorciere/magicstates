@@ -1,6 +1,6 @@
 from factory import OneLevelFactory
 from dataclasses import dataclass
-# from scipy import optimize
+from scipy import optimize
 import mpmath as mp
 
 from definitions import (
@@ -30,7 +30,7 @@ from definitions import (
 #         return np.float128(2 * ((self.dx + 4 * self.dz) * 3 * self.dx + 2 * self.dm) * 6 * self.dm) / (1 - self.failure_probability)
 
 
-def one_level_15to1_state(pphys: float | mp.mpc, dx: int, dz: int, dm: int) -> mp.matrix:
+def one_level_15to1_state(pphys: float | mp.mpf, dx: int, dz: int, dm: int) -> mp.matrix:
     
     """
     Generates the output-state density matrix of the 15-to-1 protocol
@@ -40,7 +40,7 @@ def one_level_15to1_state(pphys: float | mp.mpc, dx: int, dz: int, dm: int) -> m
     `dx`, `dz`, `dm`: distance for x, z, and measurement errors respectively
     """
 
-    pphys = mp.mpc(pphys)
+    pphys = mp.mpf(pphys)
 
     # Introduce shorthand notation for logical error rate with distances dx/dz/dm
     px = plog(pphys, dx)
@@ -294,12 +294,12 @@ def one_level_15to1_state(pphys: float | mp.mpc, dx: int, dz: int, dm: int) -> m
 
     return out
 
-def cost_of_one_level_15to1(pphys: float | mp.mpc, dx: int, dz: int, dm: int):
+def cost_of_one_level_15to1(pphys: float | mp.mpf, dx: int, dz: int, dm: int):
     """
     Calculates the output error and cost of the 15-to-1 protocol with a physical error rate `pphys` and distances `dx`, `dz` and `dm`
     """
 
-    pphys = mp.mpc(pphys)
+    pphys = mp.mpf(pphys)
 
     # Generate output state of 15-to-1 protocol
     out = one_level_15to1_state(pphys, dx, dz, dm)
@@ -316,13 +316,13 @@ def cost_of_one_level_15to1(pphys: float | mp.mpc, dx: int, dz: int, dm: int):
 
     # Full-distance computation: determine full distance required for a 100-qubit / 10000-qubit computation
     def logerr1(d):
-       return mp.float64((231 / pout) * d * plog(pphys, d) - 0.01)
+       return float((231 / pout) * d * plog(pphys, d) - 0.01)
 
     def logerr2(d):
-       return mp.float64((20284 / pout) * d * plog(pphys, d) - 0.01)
+       return float((20284 / pout) * d * plog(pphys, d) - 0.01)
 
-    #reqdist1 = int(2 * round(optimize.root(logerr1, 3, method="hybr").x[0] / 2) + 1)
-    #reqdist2 = int(2 * round(optimize.root(logerr2, 3, method="hybr").x[0] / 2) + 1)
+    reqdist1 = int(2 * round(optimize.root(logerr1, 3, method="hybr").x[0] / 2) + 1)
+    reqdist2 = int(2 * round(optimize.root(logerr2, 3, method="hybr").x[0] / 2) + 1)
 
     # Print output error, failure probability, space cost, time cost and space-time cost
     print("15-to-1 with pphys=", pphys, ", dx=", dx, ", dz=", dz, ", dm=", dm, sep="")
@@ -336,26 +336,26 @@ def cost_of_one_level_15to1(pphys: float | mp.mpc, dx: int, dz: int, dm: int):
         " qubitcycles",
         sep="",
     )
-    # print(
-    #     "For a 100-qubit computation: ",
-    #     (
-    #         "%.3f"
-    #         % (((dx + 4 * dz) * 3 * dx + 2 * dm) * 6 * dm / (1 - pfail) / reqdist1**3)
-    #     ),
-    #     "d^3 (d=",
-    #     reqdist1,
-    #     ")",
-    #     sep="",
-    # )
-    # print(
-    #     "For a 5000-qubit computation: ",
-    #     (
-    #         "%.3f"
-    #         % (((dx + 4 * dz) * 3 * dx + 2 * dm) * 6 * dm / (1 - pfail) / reqdist2**3)
-    #     ),
-    #     "d^3 (d=",
-    #     reqdist2,
-    #     ")",
-    #     sep="",
-    # )
+    print(
+        "For a 100-qubit computation: ",
+        (
+            "%.3f"
+            % (((dx + 4 * dz) * 3 * dx + 2 * dm) * 6 * dm / (1 - pfail) / reqdist1**3)
+        ),
+        "d^3 (d=",
+        reqdist1,
+        ")",
+        sep="",
+    )
+    print(
+        "For a 5000-qubit computation: ",
+        (
+            "%.3f"
+            % (((dx + 4 * dz) * 3 * dx + 2 * dm) * 6 * dm / (1 - pfail) / reqdist2**3)
+        ),
+        "d^3 (d=",
+        reqdist2,
+        ")",
+        sep="",
+    )
     print("")

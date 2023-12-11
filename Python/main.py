@@ -15,6 +15,10 @@ cost_of_one_level_15to1_small_footprint(pphys, dx, dz, dm)
 cost_of_two_level_15to1_small_footprint(pphys, dx, dz, dm, dx2, dz2, dm2)
 """
 
+from mpmath import mp
+
+mp.prec = 16
+
 print("----- pphys = 10^(-4) -----")
 cost_of_one_level_15to1(0.0001, 7, 3, 3)
 # cost_of_one_level_15to1(0.0001, 9, 3, 3)
