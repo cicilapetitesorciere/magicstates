@@ -1,23 +1,23 @@
-import numpy as np
+from mpmath import mp
 from scipy import optimize
 from definitions import (
     z,
     one,
     projx,
-    tensor_product,
+    kron,
+    trace,
     apply_rot,
     plog,
     storage_x_5,
     storage_z_5,
     init5qubit,
     ideal15to1,
-    chpf
 )
 from onelevel15to1 import one_level_15to1_state
 
 
 
-def cost_of_two_level_15to1(pphys: float | chpf, dx: int, dz: int, dm: int, dx2: int, dz2: int, dm2: int, nl1: int):
+def cost_of_two_level_15to1(pphys: float | mp.mpf, dx: int, dz: int, dm: int, dx2: int, dz2: int, dm2: int, nl1: int):
 
     """
     Calculates the output error and cost of the (15-to-1)x(15-to-1) protocol with a physical error rate pphys, level-1 distances dx, dz and dm, level-2 distances dx2, dz2 and dm2, using nl1 level-1 factories
@@ -25,7 +25,7 @@ def cost_of_two_level_15to1(pphys: float | chpf, dx: int, dz: int, dm: int, dx2:
     
     # Introduce shorthand notation for logical error rate with distances dx2/dz2/dm2
 
-    pphys = chpf(pphys)
+    pphys = mp.mpf(pphys)
 
     px2 = plog(pphys, dx2)
     pz2 = plog(pphys, dz2)
@@ -33,18 +33,11 @@ def cost_of_two_level_15to1(pphys: float | chpf, dx: int, dz: int, dm: int, dx2:
 
     # Compute pl1, the output error of level-1 states
     out = one_level_15to1_state(pphys, dx, dz, dm)
-    pfail = np.real(
-        1 - np.trace(np.dot(tensor_product(one, projx, projx, projx, projx), out))
-    )
-    outpostsel = (
-        1
-        / (1 - pfail)
-        * np.dot(
-            np.dot(tensor_product(one, projx, projx, projx, projx), out),
-            tensor_product(one, projx, projx, projx, projx).conj().transpose(),
-        )
-    )
-    pl1 = np.real(1 - np.trace(np.dot(outpostsel, ideal15to1)))
+    pfail = (1 - trace(kron(one, projx, projx, projx, projx) * out)).real
+
+    outpostsel = (1 / (1 - pfail)) * kron(one, projx, projx, projx, projx) * out * kron(one, projx, projx, projx, projx).transpose_conj()
+    
+    pl1 = (1 - trace(outpostsel * ideal15to1)).real
 
     # Compute l1time, the speed at which level-2 rotations can be performed (t_{L1} in the paper)
     l1time = max(6 * dm / (nl1 / 2) / (1 - pfail), dm2)
@@ -59,14 +52,14 @@ def cost_of_two_level_15to1(pphys: float | chpf, dx: int, dz: int, dm: int, dx2:
         [one, z, one, one, one],
         pl1 + 0.5 * lmove * pm2,
         0.5 * lmove * pm2 + 0.5 * (dx2 + dz2 + dm2) * dx2 / dm2 * pm2,
-        chpf(0),
+        mp.mpc(0),
     )
     out2 = apply_rot(
         out2,
         [one, one, z, one, one],
         pl1 + 0.5 * lmove * pm2,
         0.5 * lmove * pm2 + 0.5 * (3 * dz2 + dm2) * dx2 / dm2 * pm2,
-        chpf(0),
+        mp.mpc(0),
     )
 
     # Apply storage errors for l1time code cycles
@@ -93,14 +86,14 @@ def cost_of_two_level_15to1(pphys: float | chpf, dx: int, dz: int, dm: int, dx2:
         [one, one, one, z, one],
         pl1 + 0.5 * lmove * pm2,
         0.5 * lmove * pm2 + 0.5 * (dx2 + 3 * dz2 + dm2) * dx2 / dm2 * pm2,
-        chpf(0),
+        mp.mpc(0),
     )
     out2 = apply_rot(
         out2,
         [one, one, one, one, z],
         pl1 + 0.5 * lmove * pm2,
         0.5 * lmove * pm2 + 0.5 * (dz2 + dm2) * dx2 / dm2 * pm2,
-        chpf(0),
+        mp.mpc(0),
     )
 
     # Apply storage errors for l1time code cycles
@@ -128,14 +121,14 @@ def cost_of_two_level_15to1(pphys: float | chpf, dx: int, dz: int, dm: int, dx2:
         [z, z, z, one, one],
         pl1 + 0.5 * lmove * pm2,
         0.5 * lmove * pm2 + 0.5 * (dx2 + 2 * dz2 + dm2) * dx2 / dm2 * pm2,
-        chpf(0),
+        mp.mpc(0),
     )
     out2 = apply_rot(
         out2,
         [one, z, z, z, one],
         pl1 + 0.5 * lmove * pm2,
         0.5 * lmove * pm2 + 0.5 * (4 * dz2 + dm2) * dx2 / dm2 * pm2,
-        chpf(0),
+        mp.mpc(0),
     )
     out2 = storage_z_5(out2, 0.5 * (dx2 + 2 * dz2 + dm2) * dm2 / dx2 * px2, 0, 0, 0, 0)
 
@@ -163,14 +156,14 @@ def cost_of_two_level_15to1(pphys: float | chpf, dx: int, dz: int, dm: int, dx2:
         [z, one, z, z, one],
         pl1 + 0.5 * lmove * pm2,
         0.5 * lmove * pm2 + 0.5 * (dx2 + 3 * dz2 + dm2) * dx2 / dm2 * pm2,
-        chpf(0),
+        mp.mpc(0),
     )
     out2 = apply_rot(
         out2,
         [z, z, one, z, one],
         pl1 + 0.5 * lmove * pm2,
         0.5 * lmove * pm2 + 0.5 * (dx2 + 4 * dz2 + dm2) * dx2 / dm2 * pm2,
-        chpf(0),
+        mp.mpc(0),
     )
     out2 = storage_z_5(
         out2,
@@ -205,14 +198,14 @@ def cost_of_two_level_15to1(pphys: float | chpf, dx: int, dz: int, dm: int, dx2:
         [z, z, one, one, z],
         pl1 + 0.5 * lmove * pm2,
         0.5 * lmove * pm2 + 0.5 * (dx2 + 4 * dz2 + dm2) * dx2 / dm2 * pm2,
-        chpf(0),
+        mp.mpc(0),
     )
     out2 = apply_rot(
         out2,
         [z, one, one, z, z],
         pl1 + 0.5 * lmove * pm2,
         0.5 * lmove * pm2 + 0.5 * (dx2 + 4 * dz2 + dm2) * dx2 / dm2 * pm2,
-        chpf(0),
+        mp.mpc(0),
     )
     out2 = storage_z_5(
         out2,
@@ -247,14 +240,14 @@ def cost_of_two_level_15to1(pphys: float | chpf, dx: int, dz: int, dm: int, dx2:
         [z, one, z, one, z],
         pl1 + 0.5 * lmove * pm2,
         0.5 * lmove * pm2 + 0.5 * (dx2 + 4 * dz2 + dm2) * dx2 / dm2 * pm2,
-        chpf(0),
+        mp.mpc(0),
     )
     out2 = apply_rot(
         out2,
         [z, z, z, z, z],
         pl1 + 0.5 * lmove * pm2,
         0.5 * lmove * pm2 + 0.5 * (dx2 + 4 * dz2 + dm2) * dx2 / dm2 * pm2,
-        chpf(0),
+        mp.mpc(0),
     )
     out2 = storage_z_5(
         out2,
@@ -289,14 +282,14 @@ def cost_of_two_level_15to1(pphys: float | chpf, dx: int, dz: int, dm: int, dx2:
         [one, z, one, z, z],
         pl1 + 0.5 * lmove * pm2,
         0.5 * lmove * pm2 + 0.5 * (dx2 + 4 * dz2 + dm2) * dx2 / dm2 * pm2,
-        chpf(0),
+        mp.mpc(0),
     )
     out2 = apply_rot(
         out2,
         [one, one, z, z, z],
         pl1 + 0.5 * lmove * pm2,
         0.5 * lmove * pm2 + 0.5 * (3 * dz2 + dm2) * dx2 / dm2 * pm2,
-        chpf(0),
+        mp.mpc(0),
     )
     out2 = storage_z_5(out2, 0.5 * (dx2 + 4 * dz2 + dm2) * dm2 / dx2 * px2, 0, 0, 0, 0)
 
@@ -325,7 +318,7 @@ def cost_of_two_level_15to1(pphys: float | chpf, dx: int, dz: int, dm: int, dx2:
         [one, z, z, one, z],
         pl1 + 0.5 * lmove * pm2,
         0.5 * lmove * pm2 + 0.5 * (4 * dz2 + dm2) * dx2 / dm2 * pm2,
-        chpf(0),
+        mp.mpc(0),
     )
 
     # Apply storage errors for l1time code cycles
@@ -347,31 +340,22 @@ def cost_of_two_level_15to1(pphys: float | chpf, dx: int, dz: int, dm: int, dx2:
     )
 
     # Compute level-2 failure probability as the probability to measure qubits 2-5 in the |+> state
-    pfail2 = np.real(
-        1 - np.trace(np.dot(tensor_product(one, projx, projx, projx, projx), out2))
-    )
+    pfail2 = (1 - trace(kron(one, projx, projx, projx, projx) * out2)).real
 
     # Compute the density matrix of the post-selected output state, i.e., after projecting qubits 2-5 into |+>
-    outpostsel2 = (
-        1
-        / (1 - pfail2)
-        * np.dot(
-            np.dot(tensor_product(one, projx, projx, projx, projx), out2),
-            tensor_product(one, projx, projx, projx, projx).conj().transpose(),
-        )
-    )
+    outpostsel2 = (1 / (1 - pfail2)) * kron(one, projx, projx, projx, projx) * out2 * kron(one, projx, projx, projx, projx).transpose_conj()
 
     # Compute level-2 output error from the infidelity between the post-selected state and the ideal output state
-    pout = np.real(1 - np.trace(np.dot(outpostsel2, ideal15to1)))
+    pout = (1 - trace(outpostsel2 * ideal15to1)).real
 
     #breakpoint()
 
     # Full-distance computation: determine full distance required for a 100-qubit / 10000-qubit computation
     def logerr1(d):
-        return np.float64(231 / pout * d * plog(pphys, d) - 0.01)
+        return float(231 / pout * d * plog(pphys, d) - 0.01)
 
     def logerr2(d):
-        return np.float64(20284 / pout * d * plog(pphys, d) - 0.01)
+        return float(20284 / pout * d * plog(pphys, d) - 0.01)
 
     reqdist1 = int(2 * round(optimize.root(logerr1, 3, method="hybr").x[0] / 2) + 1)
     reqdist2 = int(2 * round(optimize.root(logerr2, 3, method="hybr").x[0] / 2) + 1)
