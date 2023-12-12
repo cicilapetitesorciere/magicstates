@@ -1,6 +1,5 @@
 from mpmath import mp
 from typing import List
-from numpy.typing import NDArray
 
 # Pauli matrices and projector |+><+|
 x = mp.matrix([[0, 1], [1, 0]])
