@@ -380,7 +380,7 @@ def cost_of_one_level_15to1_small_footprint(pphys, dx, dz, dm):
     )
 
     # Compute failure probability as the probability to measure qubits 2-5 in the |+> state
-    pfail = 1 - np.trace(kron(one, projx, projx, projx, projx) * out).real
+    pfail = 1 - trace(kron(one, projx, projx, projx, projx) * out).real
 
     # Compute the density matrix of the post-selected output state, i.e., after projecting qubits 2-5 into |+>
     outpostsel = (1 / (1 - pfail)) * kron(one, projx, projx, projx, projx) * out * kron(one, projx, projx, projx, projx).transpose_conj()
@@ -458,7 +458,7 @@ def cost_of_two_level_15to1_small_footprint(pphys, dx, dz, dm, dx2, dz2, dm2):
     out = one_level_15to1_state(pphys, dx, dz, dm)
     pfail = 1 - trace(kron(one, projx, projx, projx, projx) * out).real
     
-    outpostsel = (1 / (1 - pfail)) * kron(one, projx, projx, projx, projx) * out * kron(one, projx, projx, projx, projx).conj().transpose()
+    outpostsel = (1 / (1 - pfail)) * kron(one, projx, projx, projx, projx) * out * kron(one, projx, projx, projx, projx).transpose_conj()
   
 
     pl1 = 1 - trace(outpostsel * ideal15to1).real + 5 * pm2 * dm2

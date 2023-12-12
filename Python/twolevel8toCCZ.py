@@ -30,7 +30,7 @@ def cost_of_two_level_8toccz(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
     out = one_level_15to1_state(pphys, dx, dz, dm)
     pfail = 1 - trace(kron(one, projx, projx, projx, projx) * out).real
     
-    outpostsel = (1/ (1 - pfail)) * kron(one, projx, projx, projx, projx) * out * kron(one, projx, projx, projx, projx).transpose_con()
+    outpostsel = (1/ (1 - pfail)) * kron(one, projx, projx, projx, projx) * out * kron(one, projx, projx, projx, projx).transpose_conj()
     
     pl1 = (1 - trace(outpostsel * ideal15to1)).real
 
