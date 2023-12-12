@@ -1,10 +1,11 @@
-import numpy as np
+from mpmath import mp
 from scipy import optimize
 from definitions import (
     z,
     one,
     projx,
-    tensor_product,
+    kron,
+    trace,
     apply_rot,
     plog,
     ideal15to1,
@@ -16,10 +17,10 @@ from definitions import (
 from onelevel15to1 import one_level_15to1_state
 
 
-# Calculates the output error and cost of the (15-to-1)x(20-to-4) protocol
-# with a physical error rate pphys, level-1 distances dx, dz and dm,
-# level-2 distances dx2, dz2 and dm2, using nl1 level-1 factories
 def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
+    """
+    Calculates the output error and cost of the (15-to-1)x(20-to-4) protocol with a physical error rate pphys, level-1 distances dx, dz and dm, level-2 distances dx2, dz2 and dm2, using nl1 level-1 factories
+    """
     # Introduce shorthand notation for logical error rate with distances dx2/dz2/dm2
     px2 = plog(pphys, dx2)
     pz2 = plog(pphys, dz2)
@@ -27,18 +28,11 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
 
     # Compute pl1, the output error of level-1 states
     out = one_level_15to1_state(pphys, dx, dz, dm)
-    pfail = np.real(
-        1 - np.trace(np.dot(tensor_product(one, projx, projx, projx, projx), out))
-    )
-    outpostsel = (
-        1
-        / (1 - pfail)
-        * np.dot(
-            np.dot(tensor_product(one, projx, projx, projx, projx), out),
-            tensor_product(one, projx, projx, projx, projx).conj().transpose(),
-        )
-    )
-    pl1 = np.real(1 - np.trace(np.dot(outpostsel, ideal15to1)))
+    pfail = (1 - trace(kron(one, projx, projx, projx, projx) * out)).real
+    
+    outpostsel = (1 / (1 - pfail)) * kron(one, projx, projx, projx, projx) * out * kron(one, projx, projx, projx, projx).transpose_conj()
+    
+    pl1 = (1 - trace(outpostsel * ideal15to1)).real
 
     # Compute l1time, the speed at which level-2 rotations can be performed (t_{L1} in the paper)
     l1time = max(6 * dm / (nl1 / 2) / (1 - pfail), dm2)
@@ -508,34 +502,20 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
     )
 
     # Compute level-2 failure probability as the probability to measure qubits 5-7 in the |+> state
-    pfail2 = np.real(
-        1
-        - np.trace(
-            np.dot(tensor_product(one, one, one, one, projx, projx, projx), out2)
-        )
-    )
+    pfail2 = (1 - trace(kron(one, one, one, one, projx, projx, projx) * out)).real
 
     # Compute the density matrix of the post-selected output state, i.e., after projecting qubits 5-7 into |+>
-    outpostsel2 = (
-        1
-        / (1 - pfail2)
-        * np.dot(
-            np.dot(tensor_product(one, one, one, one, projx, projx, projx), out2),
-            tensor_product(one, one, one, one, projx, projx, projx)
-            .conj()
-            .transpose(),
-        )
-    )
+    outpostsel2 = (1 / (1 - pfail2)) * kron(one, one, one, one, projx, projx, projx) * out2 * kron(one, one, one, one, projx, projx, projx).transpose_con()
 
     # Compute level-2 output error from the infidelity between the post-selected state and the ideal output state
-    pout = np.real(1 - np.trace(np.dot(outpostsel2, ideal20to4)))
+    pout = (1 - trace(outpostsel2 * ideal20to4)).real
 
     # Full-distance computation: determine full distance required for a 100-qubit / 10000-qubit computation
     def logerr1(d):
-        return 231 / (pout / 4) * d * plog(pphys, d) - 0.01
+        return float(231 / (pout / 4) * d * plog(pphys, d) - 0.01)
 
     def logerr2(d):
-        return 20284 / (pout / 4) * d * plog(pphys, d) - 0.01
+        return float(20284 / (pout / 4) * d * plog(pphys, d) - 0.01)
 
     reqdist1 = int(2 * round(optimize.root(logerr1, 3, method="hybr").x[0] / 2) + 1)
     reqdist2 = int(2 * round(optimize.root(logerr2, 3, method="hybr").x[0] / 2) + 1)

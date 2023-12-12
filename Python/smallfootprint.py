@@ -1,10 +1,11 @@
-import numpy as np
+from mpmath import mp
 from scipy import optimize
 from definitions import (
     z,
     one,
     projx,
-    tensor_product,
+    kron,
+    trace,
     apply_rot,
     plog,
     storage_x_5,
@@ -379,29 +380,19 @@ def cost_of_one_level_15to1_small_footprint(pphys, dx, dz, dm):
     )
 
     # Compute failure probability as the probability to measure qubits 2-5 in the |+> state
-    pfail = np.real(
-        1 - np.trace(np.dot(tensor_product(one, projx, projx, projx, projx), out))
-    )
+    pfail = 1 - np.trace(kron(one, projx, projx, projx, projx) * out).real
 
     # Compute the density matrix of the post-selected output state, i.e., after projecting qubits 2-5 into |+>
-    outpostsel = (
-        1
-        / (1 - pfail)
-        * np.dot(
-            np.dot(tensor_product(one, projx, projx, projx, projx), out),
-            tensor_product(one, projx, projx, projx, projx).conj().transpose(),
-        )
-    )
-
+    outpostsel = (1 / (1 - pfail)) * kron(one, projx, projx, projx, projx) * out * kron(one, projx, projx, projx, projx).transpose_conj()
     # Compute output error from the infidelity between the post-selected state and the ideal output state
-    pout = np.real(1 - np.trace(np.dot(outpostsel, ideal15to1)))
+    pout = 1 - trace(outpostsel * ideal15to1).real
 
     # Full-distance computation: determine full distance required for a 100-qubit / 10000-qubit computation
     def logerr1(d):
-        return 231 / pout * d * plog(pphys, d) - 0.01
+        return float(231 / pout * d * plog(pphys, d) - 0.01)
 
     def logerr2(d):
-        return 20284 / pout * d * plog(pphys, d) - 0.01
+        return float(20284 / pout * d * plog(pphys, d) - 0.01)
 
     reqdist1 = int(2 * round(optimize.root(logerr1, 3, method="hybr").x[0] / 2) + 1)
     reqdist2 = int(2 * round(optimize.root(logerr2, 3, method="hybr").x[0] / 2) + 1)
@@ -465,18 +456,12 @@ def cost_of_two_level_15to1_small_footprint(pphys, dx, dz, dm, dx2, dz2, dm2):
     # Compute pl1, the output error of level-1 states with an added Z storage error
     # to the output state from moving the level-1 state into the intermediate region
     out = one_level_15to1_state(pphys, dx, dz, dm)
-    pfail = np.real(
-        1 - np.trace(np.dot(tensor_product(one, projx, projx, projx, projx), out))
-    )
-    outpostsel = (
-        1
-        / (1 - pfail)
-        * np.dot(
-            np.dot(tensor_product(one, projx, projx, projx, projx), out),
-            tensor_product(one, projx, projx, projx, projx).conj().transpose(),
-        )
-    )
-    pl1 = np.real(1 - np.trace(np.dot(outpostsel, ideal15to1))) + 5 * pm2 * dm2
+    pfail = 1 - trace(kron(one, projx, projx, projx, projx) * out).real
+    
+    outpostsel = (1 / (1 - pfail)) * kron(one, projx, projx, projx, projx) * out * kron(one, projx, projx, projx, projx).conj().transpose()
+  
+
+    pl1 = 1 - trace(outpostsel * ideal15to1).real + 5 * pm2 * dm2
 
     # Compute l1time, the speed at which level-2 rotations can be performed (t_{L1} in the paper)
     l1time = max(6 * dm / (1 - pfail), 2 * dm2)
@@ -885,29 +870,20 @@ def cost_of_two_level_15to1_small_footprint(pphys, dx, dz, dm, dx2, dz2, dm2):
     )
 
     # Compute level-2 failure probability as the probability to measure qubits 2-5 in the |+> state
-    pfail2 = np.real(
-        1 - np.trace(np.dot(tensor_product(one, projx, projx, projx, projx), out2))
-    )
+    pfail2 = 1 - trace(kron(one, projx, projx, projx, projx) * out2).real
 
     # Compute the density matrix of the post-selected output state, i.e., after projecting qubits 2-5 into |+>
-    outpostsel2 = (
-        1
-        / (1 - pfail2)
-        * np.dot(
-            np.dot(tensor_product(one, projx, projx, projx, projx), out2),
-            tensor_product(one, projx, projx, projx, projx).conj().transpose(),
-        )
-    )
+    outpostsel2 = (1 / (1 - pfail2)) * kron(one, projx, projx, projx, projx) * out2 * kron(one, projx, projx, projx, projx).transpose_conj()
 
     # Compute level-2 output error from the infidelity between the post-selected state and the ideal output state
-    pout = np.real(1 - np.trace(np.dot(outpostsel2, ideal15to1)))
+    pout = 1 - trace(outpostsel2 * ideal15to1).real
 
     # Full-distance computation: determine full distance required for a 100-qubit / 10000-qubit computation
     def logerr1(d):
-        return 231 / pout * d * plog(pphys, d) - 0.01
+        return float(231 / pout * d * plog(pphys, d) - 0.01)
 
     def logerr2(d):
-        return 20284 / pout * d * plog(pphys, d) - 0.01
+        return float(20284 / pout * d * plog(pphys, d) - 0.01)
 
     reqdist1 = int(2 * round(optimize.root(logerr1, 3, method="hybr").x[0] / 2) + 1)
     reqdist2 = int(2 * round(optimize.root(logerr2, 3, method="hybr").x[0] / 2) + 1)
