@@ -16,16 +16,24 @@ from definitions import (
 from onelevel15to1 import one_level_15to1_state
 
 
-
-def cost_of_two_level_15to1(pphys: float | mp.mpf, dx: int, dz: int, dm: int, dx2: int, dz2: int, dm2: int, nl1: int):
-
+def cost_of_two_level_15to1(
+    pphys: float | mp.mpf,
+    dx: int,
+    dz: int,
+    dm: int,
+    dx2: int,
+    dz2: int,
+    dm2: int,
+    nl1: int,
+):
     """
     Calculates the output error and cost of the (15-to-1)x(15-to-1) protocol with a physical error rate pphys, level-1 distances dx, dz and dm, level-2 distances dx2, dz2 and dm2, using nl1 level-1 factories
     """
-    
+
     # Introduce shorthand notation for logical error rate with distances dx2/dz2/dm2
 
-    pphys = mp.mpf(pphys)
+    if isinstance(pphys, float):
+        pphys = mp.mpf(str(pphys))
 
     px2 = plog(pphys, dx2)
     pz2 = plog(pphys, dz2)
@@ -35,8 +43,13 @@ def cost_of_two_level_15to1(pphys: float | mp.mpf, dx: int, dz: int, dm: int, dx
     out = one_level_15to1_state(pphys, dx, dz, dm)
     pfail = (1 - trace(kron(one, projx, projx, projx, projx) * out)).real
 
-    outpostsel = (1 / (1 - pfail)) * kron(one, projx, projx, projx, projx) * out * kron(one, projx, projx, projx, projx).transpose_conj()
-    
+    outpostsel = (
+        (1 / (1 - pfail))
+        * kron(one, projx, projx, projx, projx)
+        * out
+        * kron(one, projx, projx, projx, projx).transpose_conj()
+    )
+
     pl1 = (1 - trace(outpostsel * ideal15to1)).real
 
     # Compute l1time, the speed at which level-2 rotations can be performed (t_{L1} in the paper)
@@ -343,12 +356,17 @@ def cost_of_two_level_15to1(pphys: float | mp.mpf, dx: int, dz: int, dm: int, dx
     pfail2 = (1 - trace(kron(one, projx, projx, projx, projx) * out2)).real
 
     # Compute the density matrix of the post-selected output state, i.e., after projecting qubits 2-5 into |+>
-    outpostsel2 = (1 / (1 - pfail2)) * kron(one, projx, projx, projx, projx) * out2 * kron(one, projx, projx, projx, projx).transpose_conj()
+    outpostsel2 = (
+        (1 / (1 - pfail2))
+        * kron(one, projx, projx, projx, projx)
+        * out2
+        * kron(one, projx, projx, projx, projx).transpose_conj()
+    )
 
     # Compute level-2 output error from the infidelity between the post-selected state and the ideal output state
     pout = (1 - trace(outpostsel2 * ideal15to1)).real
 
-    #breakpoint()
+    # breakpoint()
 
     # Full-distance computation: determine full distance required for a 100-qubit / 10000-qubit computation
     def logerr1(d):

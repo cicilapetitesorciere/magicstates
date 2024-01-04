@@ -3,3 +3,24 @@ Python/__pycache__
 Python/.mypy_cache
 Python/tmp.py
 Python/CACHEDIR.TAG
+
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST

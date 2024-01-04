@@ -1,3 +1,37 @@
+[project]
+name = 'magicstates'
+requires-python = ">=3.9"
+version = "0.1.0"
+authors = [
+    {name = "Ciaran Neely"},
+]
+
+[tool.setuptools.packages.find]
+where = ["."]  # list of folders that contain the packages (["."] by default)
+include = ["Python"]  # package names should match these glob patterns (["*"] by default)
+exclude = []  # exclude packages matching these glob patterns (empty by default)
+namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
+
+[tool.mypy]
+# Without this we would have to add an empty __init__.py file for every package.
+namespace_packages = true
+# Without this mypy complains about the same module being imported under different
+# names. Note that this also requires setting `mypy_path`.
+explicit_package_bases = true
+# We usually keep our source code under `src/<namespace>/<library>/...`.
+# This option tells mypy to look under that directory path.
+# If your repo has a different layout you can add the appropriate paths
+# by setting MYPYPATH env variable.
+mypy_path = "Python"
+exclude = [
+]
+
+[tool.poetry.dependencies]
+scipy = "^1.11"
+numpy = "^1.26"
+mpmath = "^1.3"
+mypy = ""
+
 [[tool.mypy.overrides]]
 module = ["scipy.*","mpmath.*"]
 ignore_missing_imports = true
