@@ -301,7 +301,8 @@ def cost_of_one_level_15to1(pphys: float | mp.mpf, dx: int, dz: int, dm: int):
     Calculates the output error and cost of the 15-to-1 protocol with a physical error rate `pphys` and distances `dx`, `dz` and `dm`
     """
 
-    pphys = mp.mpf(pphys)
+    if isinstance(pphys, float):
+        pphys = mp.mpf(str(pphys))
 
     # Generate output state of 15-to-1 protocol
     out = one_level_15to1_state(pphys, dx, dz, dm)
