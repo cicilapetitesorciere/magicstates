@@ -11,38 +11,38 @@ rcp_sqrt2 = 1 / mp.sqrt(2)
 rcp_sqrt8 = 1 / mp.sqrt(8)
 
 # Density matrices of pure |+> states, pure magic states and pure CCZ states
-plusstate = (
-    mp.matrix([[rcp_sqrt2], 
-              [rcp_sqrt2]]) 
-    * 
-    mp.matrix([[rcp_sqrt2, rcp_sqrt2]])
-)
+plusstate = mp.matrix([[rcp_sqrt2], [rcp_sqrt2]]) * mp.matrix([[rcp_sqrt2, rcp_sqrt2]])
 
 
-magicstate = (
-    mp.matrix([[rcp_sqrt2], 
-              [mp.exp(1j * mp.pi / 4) * rcp_sqrt2]]) 
-    * 
-    mp.matrix([[rcp_sqrt2, mp.exp(-1j * mp.pi / 4) * 1 / mp.sqrt(2)]])
+magicstate = mp.matrix([[rcp_sqrt2], [mp.exp(1j * mp.pi / 4) * rcp_sqrt2]]) * mp.matrix(
+    [[rcp_sqrt2, mp.exp(-1j * mp.pi / 4) * 1 / mp.sqrt(2)]]
 )
 
 CCZstate = mp.matrix(
+    [
+        [rcp_sqrt8],
+        [rcp_sqrt8],
+        [rcp_sqrt8],
+        [rcp_sqrt8],
+        [rcp_sqrt8],
+        [rcp_sqrt8],
+        [rcp_sqrt8],
+        [-rcp_sqrt8],
+    ]
+) * mp.matrix(
+    [
         [
-            [rcp_sqrt8],
-            [rcp_sqrt8],
-            [rcp_sqrt8],
-            [rcp_sqrt8],
-            [rcp_sqrt8],
-            [rcp_sqrt8],
-            [rcp_sqrt8],
-            [-rcp_sqrt8],
+            rcp_sqrt8,
+            rcp_sqrt8,
+            rcp_sqrt8,
+            rcp_sqrt8,
+            rcp_sqrt8,
+            rcp_sqrt8,
+            rcp_sqrt8,
+            -rcp_sqrt8,
         ]
-    ) * mp.matrix(
-        [
-            [rcp_sqrt8, rcp_sqrt8, rcp_sqrt8, rcp_sqrt8, rcp_sqrt8, rcp_sqrt8, rcp_sqrt8, -rcp_sqrt8]
-        ]
-    )
-
+    ]
+)
 
 
 def kron(*args: mp.matrix) -> mp.matrix:
@@ -63,27 +63,32 @@ def kron(*args: mp.matrix) -> mp.matrix:
                 partition_rows *= m.rows
                 partition_cols *= m.cols
                 res[i, j] *= m[
-                        int(i * partition_rows / new_rows) % m.rows, 
-                        int(j * partition_cols / new_cols) % m.cols
-                    ]
+                    int(i * partition_rows / new_rows) % m.rows,
+                    int(j * partition_cols / new_cols) % m.cols,
+                ]
     return res
-    
+
+
 def trace(m: mp.matrix) -> mp.mpc:
     res: int = 0
-    for i in range(min(m.rows,m.cols)):
-        res += m[i,i]
+    for i in range(min(m.rows, m.cols)):
+        res += m[i, i]
     return res
 
 
 # Density matrices of 5, 7 and 4 |+> states
 init5qubit = kron(plusstate, plusstate, plusstate, plusstate, plusstate)
 
-init7qubit = kron(plusstate, plusstate, plusstate, plusstate, plusstate, plusstate, plusstate)
+init7qubit = kron(
+    plusstate, plusstate, plusstate, plusstate, plusstate, plusstate, plusstate
+)
 init4qubit = kron(plusstate, plusstate, plusstate, plusstate)
 
 # Density matrices corresponding to the ideal output state of 15-to-1, 20-to-4 and 8-to-CCZ
 ideal15to1 = kron(magicstate, plusstate, plusstate, plusstate, plusstate)
-ideal20to4 = kron(magicstate, magicstate, magicstate, magicstate, plusstate, plusstate, plusstate)
+ideal20to4 = kron(
+    magicstate, magicstate, magicstate, magicstate, plusstate, plusstate, plusstate
+)
 ideal8toCCZ = kron(CCZstate, plusstate)
 
 
@@ -94,11 +99,12 @@ def pauli_rot(axis: List[mp.matrix], angle: mp.mpc) -> mp.matrix:
     return mp.cos(angle) * mp.eye(2 ** len(axis)) + 1j * mp.sin(angle) * kron(*axis)
 
 
-
-def apply_rot(state: mp.matrix, axis: List[mp.matrix], p1: mp.mpc, p2: mp.mpc, p3: mp.mpc) -> mp.matrix:
+def apply_rot(
+    state: mp.matrix, axis: List[mp.matrix], p1: mp.mpc, p2: mp.mpc, p3: mp.mpc
+) -> mp.matrix:
     """
     Applies a `pi/8` Pauli product rotation specified by 'axis' with probability `1-p1-p2-p3`
-    
+
     A `P_(pi/2) / P_(-pi/4) / P_(pi/4)` error occurs with probability `p1 / p2 / p3`
     """
     rot0 = pauli_rot(axis, mp.pi / 8)
@@ -107,11 +113,12 @@ def apply_rot(state: mp.matrix, axis: List[mp.matrix], p1: mp.mpc, p2: mp.mpc, p
     rot3 = pauli_rot(axis, 3 * mp.pi / 8)
 
     return (
-            (1 - p1 - p2 - p3) * rot0 * state * rot0.transpose_conj()
-            + p1               * rot1 * state * rot1.transpose_conj()
-            + p2               * rot2 * state * rot2.transpose_conj()
-            + p3               * rot3 * state * rot3.transpose_conj()
+        (1 - p1 - p2 - p3) * rot0 * state * rot0.transpose_conj()
+        + p1 * rot1 * state * rot1.transpose_conj()
+        + p2 * rot2 * state * rot2.transpose_conj()
+        + p3 * rot3 * state * rot3.transpose_conj()
     )
+
 
 def apply_pauli(state: mp.matrix, pauli: List[mp.matrix], p: float) -> mp.matrix:
     """
@@ -124,7 +131,7 @@ def plog(pphys: mp.mpf, d: int) -> mp.mpc:
     """
     Estimate of the logical error rate of a surface-code patch with code distance `d` and circuit-level error rate `pphys`
     """
-    return 0.1 * (100 * pphys) ** ((d + 1) / 2)
+    return mp.mpf(str(0.01)) * (mp.mpf(str(100)) * pphys) ** ((d + 1) / 2)
 
 
 def storage_x_4(state, p1, p2, p3, p4):
@@ -144,7 +151,6 @@ def storage_z_4(state, p1, p2, p3, p4):
     res = apply_pauli(res, [one, one, z, one], p3)
     res = apply_pauli(res, [one, one, one, z], p4)
     return res
-
 
 
 def storage_x_5(state, p1, p2, p3, p4, p5):

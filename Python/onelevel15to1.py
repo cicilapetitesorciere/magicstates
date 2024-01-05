@@ -41,7 +41,8 @@ def one_level_15to1_state(
     `dx`, `dz`, `dm`: distance for x, z, and measurement errors respectively
     """
 
-    pphys = mp.mpf(pphys)
+    if isinstance(pphys, float):
+        pphys = mp.mpf(str(pphys))
 
     # Introduce shorthand notation for logical error rate with distances dx/dz/dm
     px = plog(pphys, dx)

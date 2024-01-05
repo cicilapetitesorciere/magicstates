@@ -366,8 +366,6 @@ def cost_of_two_level_15to1(
     # Compute level-2 output error from the infidelity between the post-selected state and the ideal output state
     pout = (1 - trace(outpostsel2 * ideal15to1)).real
 
-    # breakpoint()
-
     # Full-distance computation: determine full distance required for a 100-qubit / 10000-qubit computation
     def logerr1(d):
         return float(231 / pout * d * plog(pphys, d) - 0.01)
