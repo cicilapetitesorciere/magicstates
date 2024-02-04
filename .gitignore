@@ -4,3 +4,8 @@ Python/.mypy_cache
 Python/tmp.py
 Python/CACHEDIR.TAG
 *.pdf
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.synctex.gz
