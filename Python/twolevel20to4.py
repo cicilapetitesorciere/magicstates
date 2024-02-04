@@ -21,6 +21,27 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
     """
     Calculates the output error and cost of the (15-to-1)x(20-to-4) protocol with a physical error rate pphys, level-1 distances dx, dz and dm, level-2 distances dx2, dz2 and dm2, using nl1 level-1 factories
     """
+
+    print(
+        "(15-to-1)x(20-to-4) with pphys=",
+        pphys,
+        ", dx=",
+        dx,
+        ", dz=",
+        dz,
+        ", dm=",
+        dm,
+        ", dx2=",
+        dx2,
+        ", dz2=",
+        dz2,
+        ", dm2=",
+        dm2,
+        ", nl1=",
+        nl1,
+        sep="",
+    )
+
     # Introduce shorthand notation for logical error rate with distances dx2/dz2/dm2
     px2 = plog(pphys, dx2)
     pz2 = plog(pphys, dz2)
@@ -41,7 +62,7 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
     # before reaching the level-2 block, picking up additional storage errors
     lmove = 10 * dm2 + nl1 / 4 * (dx + 4 * dz)
 
-    # Step 1 of (15-to-1)x(20-to-4) protocol applying rotations 1-2
+    print("Step 1 of (15-to-1)x(20-to-4) protocol applying rotations 1-2")
     out2 = apply_rot(
         init7qubit,
         [one, one, one, one, -1 * z, one, one],
@@ -79,7 +100,7 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
         0,
     )
 
-    # Step 2: apply rotations 4-5
+    print("Step 2: apply rotations 4-5")
     # Last operation: apply additional storage errors due to multi-patch measurements
     out2 = apply_rot(
         out2,
@@ -121,7 +142,7 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
         0.5 * (dx2 / dz2) * pz2 * l1time,
     )
 
-    # Step 3: apply rotations 3 and 6
+    print("Step 3: apply rotations 3 and 6")
     out2 = apply_rot(
         out2,
         [z, one, one, one, one, z, z],
@@ -162,7 +183,7 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
         0.5 * (dx2 / dz2) * pz2 * l1time,
     )
 
-    # Step 4: apply rotations 7-8
+    print("Step 4: apply rotations 7-8")
     out2 = apply_rot(
         out2,
         [z, one, one, one, z, one, z],
@@ -210,7 +231,7 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
         0.5 * (dx2 / dz2) * pz2 * l1time,
     )
 
-    # Step 5: apply rotations 9-10
+    print("Step 5: apply rotations 9-10")
     out2 = apply_rot(
         out2,
         [z, z, z, z, one, z, one],
@@ -258,7 +279,7 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
         0.5 * (dx2 / dz2) * pz2 * l1time,
     )
 
-    # Step 6: apply rotations 11-12
+    print("Step 6: apply rotations 11-12")
     out2 = apply_rot(
         out2,
         [z, z, z, z, z, one, one],
@@ -306,7 +327,7 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
         0.5 * (dx2 / dz2) * pz2 * l1time,
     )
 
-    # Step 7: apply rotations 13-14
+    print("Step 7: apply rotations 13-14")
     out2 = apply_rot(
         out2,
         [z, z, z, z, z, z, z],
@@ -354,7 +375,7 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
         0.5 * (dx2 / dz2) * pz2 * l1time,
     )
 
-    # Step 8: apply rotations 15-16
+    print("Step 8: apply rotations 15-16")
     out2 = apply_rot(
         out2,
         [z, z, z, z, one, one, z],
@@ -403,7 +424,7 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
         0.5 * (dx2 / dz2) * pz2 * l1time,
     )
 
-    # Step 9: apply rotations 17-18
+    print("Step 9: apply rotations 17-18")
     out2 = apply_rot(
         out2,
         [one, one, z, one, one, z, z],
@@ -452,7 +473,7 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
         0.5 * (dx2 / dz2) * pz2 * l1time,
     )
 
-    # Step 10: apply rotations 19-20
+    print("Step 10: apply rotations 19-20")
     out2 = apply_rot(
         out2,
         [one, one, one, z, z, one, z],
@@ -501,14 +522,19 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
         0.5 * (dx2 / dz2) * pz2 * l1time,
     )
 
+
     # Compute level-2 failure probability as the probability to measure qubits 5-7 in the |+> state
-    pfail2 = (1 - trace(kron(one, one, one, one, projx, projx, projx) * out)).real
+    pfail2 = (1 - trace(kron(one, one, one, one, projx, projx, projx) * out2)).real
+
 
     # Compute the density matrix of the post-selected output state, i.e., after projecting qubits 5-7 into |+>
-    outpostsel2 = (1 / (1 - pfail2)) * kron(one, one, one, one, projx, projx, projx) * out2 * kron(one, one, one, one, projx, projx, projx).transpose_con()
+    outpostsel2 = (1 / (1 - pfail2)) * kron(one, one, one, one, projx, projx, projx) * out2 * kron(one, one, one, one, projx, projx, projx).transpose_conj()
+
 
     # Compute level-2 output error from the infidelity between the post-selected state and the ideal output state
     pout = (1 - trace(outpostsel2 * ideal20to4)).real
+
+    breakpoint()
 
     # Full-distance computation: determine full distance required for a 100-qubit / 10000-qubit computation
     def logerr1(d):
@@ -528,25 +554,7 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
         + 2 * dx2 * dm2
     )
     ncycles = 10 * l1time / (1 - pfail2)
-    print(
-        "(15-to-1)x(20-to-4) with pphys=",
-        pphys,
-        ", dx=",
-        dx,
-        ", dz=",
-        dz,
-        ", dm=",
-        dm,
-        ", dx2=",
-        dx2,
-        ", dz2=",
-        dz2,
-        ", dm2=",
-        dm2,
-        ", nl1=",
-        nl1,
-        sep="",
-    )
+    
     print("Output error: ", "%.4g" % (pout / 4), sep="")
     print("Failure probability: ", "%.3g" % pfail2, sep="")
     print("Qubits: ", "%.0f" % nqubits, sep="")
