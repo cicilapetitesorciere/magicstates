@@ -1,3 +1,5 @@
+from magic_state_factory import MagicStateFactory
+import mpmath
 from mpmath import mp
 from scipy import optimize
 from definitions import (
@@ -17,30 +19,33 @@ from definitions import (
 from onelevel15to1 import one_level_15to1_state
 
 
-def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
+def cost_of_two_level_20to4(pphys: float | mpmath.mpf, dx: int, dz: int, dm: int, dx2: int, dz2: int, dm2: int, nl1: int, print_progress: bool = False) -> MagicStateFactory:
     """
     Calculates the output error and cost of the (15-to-1)x(20-to-4) protocol with a physical error rate pphys, level-1 distances dx, dz and dm, level-2 distances dx2, dz2 and dm2, using nl1 level-1 factories
     """
 
-    print(
-        "(15-to-1)x(20-to-4) with pphys=",
-        pphys,
-        ", dx=",
-        dx,
-        ", dz=",
-        dz,
-        ", dm=",
-        dm,
-        ", dx2=",
-        dx2,
-        ", dz2=",
-        dz2,
-        ", dm2=",
-        dm2,
-        ", nl1=",
-        nl1,
-        sep="",
-    )
+    pphys = mp.mpf(pphys)
+
+    if print_progress:
+        print(
+            "(15-to-1)x(20-to-4) with pphys=",
+            pphys,
+            ", dx=",
+            dx,
+            ", dz=",
+            dz,
+            ", dm=",
+            dm,
+            ", dx2=",
+            dx2,
+            ", dz2=",
+            dz2,
+            ", dm2=",
+            dm2,
+            ", nl1=",
+            nl1,
+            sep="",
+        )
 
     # Introduce shorthand notation for logical error rate with distances dx2/dz2/dm2
     px2 = plog(pphys, dx2)
@@ -62,7 +67,8 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
     # before reaching the level-2 block, picking up additional storage errors
     lmove = 10 * dm2 + nl1 / 4 * (dx + 4 * dz)
 
-    print("Step 1 of (15-to-1)x(20-to-4) protocol applying rotations 1-2")
+    if print_progress:
+        print("Step 1 of (15-to-1)x(20-to-4) protocol applying rotations 1-2")
     out2 = apply_rot(
         init7qubit,
         [one, one, one, one, -1 * z, one, one],
@@ -100,7 +106,8 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
         0,
     )
 
-    print("Step 2: apply rotations 4-5")
+    if print_progress:
+        print("Step 2: apply rotations 4-5")
     # Last operation: apply additional storage errors due to multi-patch measurements
     out2 = apply_rot(
         out2,
@@ -142,7 +149,8 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
         0.5 * (dx2 / dz2) * pz2 * l1time,
     )
 
-    print("Step 3: apply rotations 3 and 6")
+    if print_progress:
+        print("Step 3: apply rotations 3 and 6")
     out2 = apply_rot(
         out2,
         [z, one, one, one, one, z, z],
@@ -183,7 +191,8 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
         0.5 * (dx2 / dz2) * pz2 * l1time,
     )
 
-    print("Step 4: apply rotations 7-8")
+    if print_progress:
+        print("Step 4: apply rotations 7-8")
     out2 = apply_rot(
         out2,
         [z, one, one, one, z, one, z],
@@ -231,7 +240,8 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
         0.5 * (dx2 / dz2) * pz2 * l1time,
     )
 
-    print("Step 5: apply rotations 9-10")
+    if print_progress:
+        print("Step 5: apply rotations 9-10")
     out2 = apply_rot(
         out2,
         [z, z, z, z, one, z, one],
@@ -279,7 +289,8 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
         0.5 * (dx2 / dz2) * pz2 * l1time,
     )
 
-    print("Step 6: apply rotations 11-12")
+    if print_progress:
+        print("Step 6: apply rotations 11-12")
     out2 = apply_rot(
         out2,
         [z, z, z, z, z, one, one],
@@ -327,7 +338,8 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
         0.5 * (dx2 / dz2) * pz2 * l1time,
     )
 
-    print("Step 7: apply rotations 13-14")
+    if print_progress:
+        print("Step 7: apply rotations 13-14")
     out2 = apply_rot(
         out2,
         [z, z, z, z, z, z, z],
@@ -375,7 +387,8 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
         0.5 * (dx2 / dz2) * pz2 * l1time,
     )
 
-    print("Step 8: apply rotations 15-16")
+    if print_progress:
+        print("Step 8: apply rotations 15-16")
     out2 = apply_rot(
         out2,
         [z, z, z, z, one, one, z],
@@ -424,7 +437,8 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
         0.5 * (dx2 / dz2) * pz2 * l1time,
     )
 
-    print("Step 9: apply rotations 17-18")
+    if print_progress:
+        print("Step 9: apply rotations 17-18")
     out2 = apply_rot(
         out2,
         [one, one, z, one, one, z, z],
@@ -473,7 +487,8 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
         0.5 * (dx2 / dz2) * pz2 * l1time,
     )
 
-    print("Step 10: apply rotations 19-20")
+    if print_progress:
+        print("Step 10: apply rotations 19-20")
     out2 = apply_rot(
         out2,
         [one, one, one, z, z, one, z],
@@ -547,7 +562,7 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
     reqdist2 = int(2 * round(optimize.root(logerr2, 3, method="hybr").x[0] / 2) + 1)
 
     # Print output error, failure probability, space cost, time cost and space-time cost
-    nqubits = 2 * (
+    nqubits = 2 * int(
         (4 * dx2 + 3 * dz2) * 3 * dx2
         + nl1 * ((dx + 4 * dz) * (3 * dx + dm2 / 2) + 2 * dm)
         + 20 * dm2 * dm2
@@ -555,25 +570,11 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
     )
     ncycles = 10 * l1time / (1 - pfail2)
     
-    print("Output error: ", "%.4g" % (pout / 4), sep="")
-    print("Failure probability: ", "%.3g" % pfail2, sep="")
-    print("Qubits: ", "%.0f" % nqubits, sep="")
-    print("Code cycles: ", "%.2f" % ncycles, sep="")
-    print("Space-time cost: ", "%.0f" % (nqubits * ncycles / 4), " qubitcycles", sep="")
-    print(
-        "For a 100-qubit computation: ",
-        ("%.3f" % (nqubits * ncycles / 4 / 2 / reqdist1**3)),
-        "d^3 (d=",
-        reqdist1,
-        ")",
-        sep="",
+    return MagicStateFactory(
+        name=f'(15-to-1)x(20-to-4) with pphys={pphys}, dx={dx}, dz={dz}, dm={dm}, dx2={dx2}, dz2={dz2}, dm2={dm2}, nl1={nl1}',
+        distilled_magic_state_error_rate=pout / 4,
+        space=(0, 0),
+        qubits=nqubits,
+        distillation_time_in_cycles=ncycles,
+        n_t_gates_produced_per_distillation=4,
     )
-    print(
-        "For a 5000-qubit computation: ",
-        ("%.3f" % (nqubits * ncycles / 4 / 2 / reqdist2**3)),
-        "d^3 (d=",
-        reqdist2,
-        ")",
-        sep="",
-    )
-    print("")

@@ -1,3 +1,5 @@
+from magic_state_factory import MagicStateFactory
+import mpmath
 from mpmath import mp
 from scipy import optimize
 from definitions import (
@@ -20,7 +22,11 @@ from onelevel15to1 import one_level_15to1_state
 # Calculates the output error and cost of the (15-to-1)x(8-to-CCZ) protocol
 # with a physical error rate pphys, level-1 distances dx, dz and dm,
 # level-2 distances dx2, dz2 and dm2, using nl1 level-1 factories
-def cost_of_two_level_8toccz(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
+def cost_of_two_level_8toccz(pphys: float | mpmath.mpf, dx: int, dz: int, dm: int, dx2: int, dz2: int, dm2: int, nl1: int) -> MagicStateFactory:
+    
+    pphys = mp.mpf(pphys)
+
+
     # Introduce shorthand notation for logical error rate with distances dx2/dz2/dm2
     px2 = plog(pphys, dx2)
     pz2 = plog(pphys, dz2)
@@ -203,13 +209,23 @@ def cost_of_two_level_8toccz(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
     reqdist2 = int(2 * round(optimize.root(logerr2, 3, method="hybr").x[0] / 2) + 1)
 
     # Print output error, failure probability, space cost, time cost and space-time cost
-    nqubits = 2 * (
+    nqubits = 2 * int(
         (3 * dx2 + dz2) * 3 * dx2
         + nl1 * ((dx + 4 * dz) * (3 * dx + dm2 / 2) + 2 * dm)
         + 20 * dm2 * dm2
         + 2 * dx2 * dm2
     )
     ncycles = 4 * l1time / (1 - pfail2)
+
+    return MagicStateFactory(
+        name=f'(15-to-1)x(8-to-CCZ) with pphys={pphys}, dx={dx}, dz={dz}, dm={dm}, dx2={dx2}, dz2={dz2}, dm2={dm2}, nl1={nl1}',
+        distilled_magic_state_error_rate=pout,
+        space=(0, 0),
+        qubits=nqubits,
+        distillation_time_in_cycles=ncycles,
+        n_t_gates_produced_per_distillation=1,
+    )
+
     print(
         "(15-to-1)x(8-to-CCZ) with pphys=",
         pphys,
