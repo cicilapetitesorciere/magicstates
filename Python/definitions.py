@@ -1,3 +1,4 @@
+import mpmath
 from mpmath import mp
 from typing import List
 
@@ -45,7 +46,7 @@ CCZstate = mp.matrix(
 
 
 
-def kron(*args: mp.matrix) -> mp.matrix:
+def kron(*args: mpmath.matrix) -> mpmath.matrix:
     """
     Calculates the tensor products of 2 or more matrices
     """
@@ -68,7 +69,7 @@ def kron(*args: mp.matrix) -> mp.matrix:
                     ]
     return res
     
-def trace(m: mp.matrix) -> mp.mpc:
+def trace(m: mpmath.matrix) -> mpmath.mpc:
     res: int = 0
     for i in range(min(m.rows,m.cols)):
         res += m[i,i]
@@ -87,7 +88,7 @@ ideal20to4 = kron(magicstate, magicstate, magicstate, magicstate, plusstate, plu
 ideal8toCCZ = kron(CCZstate, plusstate)
 
 
-def pauli_rot(axis: List[mp.matrix], angle: mp.mpc) -> mp.matrix:
+def pauli_rot(axis: List[mpmath.matrix], angle: mpmath.mpc) -> mpmath.matrix:
     """
     Pauli product rotation `e^(iP*phi)`, where the Pauli product `P` is specified by 'axis' and `phi` is the rotation angle
     """
@@ -95,7 +96,7 @@ def pauli_rot(axis: List[mp.matrix], angle: mp.mpc) -> mp.matrix:
 
 
 
-def apply_rot(state: mp.matrix, axis: List[mp.matrix], p1: mp.mpc, p2: mp.mpc, p3: mp.mpc) -> mp.matrix:
+def apply_rot(state: mpmath.matrix, axis: List[mpmath.matrix], p1: mpmath.mpc, p2: mpmath.mpc, p3: mpmath.mpc) -> mpmath.matrix:
     """
     Applies a `pi/8` Pauli product rotation specified by 'axis' with probability `1-p1-p2-p3`
     
@@ -113,14 +114,14 @@ def apply_rot(state: mp.matrix, axis: List[mp.matrix], p1: mp.mpc, p2: mp.mpc, p
             + p3               * rot3 * state * rot3.transpose_conj()
     )
 
-def apply_pauli(state: mp.matrix, pauli: List[mp.matrix], p: float) -> mp.matrix:
+def apply_pauli(state: mpmath.matrix, pauli: List[mpmath.matrix], p: float) -> mpmath.matrix:
     """
     Applies a Pauli operator to a state with probability `p`
     """
     return (1 - p) * state + p * kron(*pauli) * state * kron(*pauli)
 
 
-def plog(pphys: mp.mpf, d: int) -> mp.mpc:
+def plog(pphys: mpmath.mpf, d: int) -> mpmath.mpc:
     """
     Estimate of the logical error rate of a surface-code patch with code distance `d` and circuit-level error rate `pphys`
     """
