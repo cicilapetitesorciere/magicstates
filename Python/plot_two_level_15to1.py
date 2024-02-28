@@ -190,13 +190,13 @@ while True:
             log_simulation(nl1_probe.get())
             df.to_csv('two_level_15to1_simulations.csv', mode='a', index=False, header=False)
 
-            centre_dx = min(1, centre_dx + step_size * (1 if dx_probe.get().rating() <= centre_rating else -1))
-            centre_dz = min(1, centre_dz + step_size * (1 if dz_probe.get().rating() <= centre_rating else -1))
-            centre_dm = min(1, centre_dm + step_size * (1 if dm_probe.get().rating() <= centre_rating else -1))
-            centre_dx2 = min(1, centre_dx2 + step_size * (1 if dx2_probe.get().rating() <= centre_rating else -1))
-            centre_dz2 = min(1, centre_dz2 + step_size * (1 if dz2_probe.get().rating() <= centre_rating else -1))
-            centre_dm2 = min(1, centre_dm2 + step_size * (1 if dm2_probe.get().rating() <= centre_rating else -1))
-            centre_nl1 = min(2, centre_nl1 + step_size * (1 if nl1_probe.get().rating() <= centre_rating else -1))
+            centre_dx = max(1, centre_dx + step_size * (1 if dx_probe.get().rating() <= centre_rating else -1))
+            centre_dz = max(1, centre_dz + step_size * (1 if dz_probe.get().rating() <= centre_rating else -1))
+            centre_dm = max(1, centre_dm + step_size * (1 if dm_probe.get().rating() <= centre_rating else -1))
+            centre_dx2 = max(1, centre_dx2 + step_size * (1 if dx2_probe.get().rating() <= centre_rating else -1))
+            centre_dz2 = max(1, centre_dz2 + step_size * (1 if dz2_probe.get().rating() <= centre_rating else -1))
+            centre_dm2 = max(1, centre_dm2 + step_size * (1 if dm2_probe.get().rating() <= centre_rating else -1))
+            centre_nl1 = max(2, centre_nl1 + step_size * (1 if nl1_probe.get().rating() <= centre_rating else -1))
 
         except KeyboardInterrupt:
             pool.terminate()
