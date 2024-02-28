@@ -1,4 +1,5 @@
 from magic_state_factory import MagicStateFactory
+from functools import lru_cache
 import mpmath
 from mpmath import mp
 from scipy import optimize
@@ -17,6 +18,17 @@ from definitions import (
 )
 from onelevel15to1 import one_level_15to1_state
 
+@lru_cache
+def one_level_15to1_state_memoized(pphys, dx, dz, dm):
+    out = one_level_15to1_state(pphys, dx, dz, dm)
+    pfail = (1 - trace(kron(one, projx, projx, projx, projx) * out)).real
+
+    outpostsel = (1 / (1 - pfail)) * kron(one, projx, projx, projx, projx) * out * kron(one, projx, projx, projx, projx).transpose_conj()
+    
+    pl1 = (1 - trace(outpostsel * ideal15to1)).real
+
+    return pfail, pl1
+
 def cost_of_two_level_15to1(pphys: float | mpmath.mpf, dx: int, dz: int, dm: int, dx2: int, dz2: int, dm2: int, nl1: int) -> MagicStateFactory:
 
     """
@@ -32,12 +44,7 @@ def cost_of_two_level_15to1(pphys: float | mpmath.mpf, dx: int, dz: int, dm: int
     pm2 = plog(pphys, dm2)
 
     # Compute pl1, the output error of level-1 states
-    out = one_level_15to1_state(pphys, dx, dz, dm)
-    pfail = (1 - trace(kron(one, projx, projx, projx, projx) * out)).real
-
-    outpostsel = (1 / (1 - pfail)) * kron(one, projx, projx, projx, projx) * out * kron(one, projx, projx, projx, projx).transpose_conj()
-    
-    pl1 = (1 - trace(outpostsel * ideal15to1)).real
+    pfail, pl1 = one_level_15to1_state_memoized(pphys, dx, dz, dm)
 
     # Compute l1time, the speed at which level-2 rotations can be performed (t_{L1} in the paper)
     l1time = max(6 * dm / (nl1 / 2) / (1 - pfail), dm2)
@@ -373,6 +380,6 @@ def cost_of_two_level_15to1(pphys: float | mpmath.mpf, dx: int, dz: int, dm: int
         distilled_magic_state_error_rate=pout,
         space=(0, 0),
         qubits=nqubits,
-        distillation_time_in_cycles=(nqubits * ncycles),
+        distillation_time_in_cycles=ncycles,
         n_t_gates_produced_per_distillation=1,
     )
