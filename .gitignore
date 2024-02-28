@@ -9,3 +9,4 @@ Python/CACHEDIR.TAG
 *.fls
 *.log
 *.synctex.gz
+Simulation_Data/*
