@@ -5,7 +5,7 @@ mp.prec = 128
 import mpmath
 from multiprocessing import Pool
 import pandas as pd
-from datetime import date
+from datetime import datetime
 
 from magic_state_factory import MagicStateFactory
 from twolevel15to1 import cost_of_two_level_15to1
@@ -39,13 +39,13 @@ class SimulationTwoLevel15to1:
 
     def rating(self) -> mpmath.mpf:
         return (
-            mp.mpf(self.factory.distilled_magic_state_error_rate) / self.factory.qubits
+            self.factory.distilled_magic_state_error_rate * self.factory.qubits
         )
 
 
 df = pd.DataFrame(columns = ['date', 'precision_in_bits', 'pphys', 'dx', 'dz', 'dm', 'dx2', 'dz2', 'dm2', 'nl1', 'error_rate', 'qubits', 'code_cycles'])
 def log_simulation(sim: SimulationTwoLevel15to1) -> None:
-    new_row = {'date': str(date.today()), 'pphys': pphys, 'precision_in_bits': mp.prec, 'dx': sim.dx, 'dz': sim.dz, 'dm': sim.dm, 'dx2': sim.dx2, 'dz2': sim.dz2, 'dm2': sim.dm2, 'nl1': sim.nl1, 'error_rate': sim.factory.distilled_magic_state_error_rate, 'qubits': sim.factory.qubits, 'code_cycles': sim.factory.distillation_time_in_cycles}
+    new_row = {'date': datetime.now().strftime("%Y-%m-%d %H:%M"), 'pphys': pphys, 'precision_in_bits': mp.prec, 'dx': sim.dx, 'dz': sim.dz, 'dm': sim.dm, 'dx2': sim.dx2, 'dz2': sim.dz2, 'dm2': sim.dm2, 'nl1': sim.nl1, 'error_rate': sim.factory.distilled_magic_state_error_rate, 'qubits': sim.factory.qubits, 'code_cycles': sim.factory.distillation_time_in_cycles}
     df.loc[len(df)] = new_row # type: ignore
 
 
@@ -188,7 +188,7 @@ while True:
             log_simulation(dz2_probe.get())
             log_simulation(dm2_probe.get())
             log_simulation(nl1_probe.get())
-            df.to_csv('two_level_15to1_simulations.csv', mode='a', index=False, header=False)
+            
 
             centre_dx = max(1, centre_dx + step_size * (1 if dx_probe.get().rating() <= centre_rating else -1))
             centre_dz = max(1, centre_dz + step_size * (1 if dz_probe.get().rating() <= centre_rating else -1))
@@ -200,4 +200,5 @@ while True:
 
         except KeyboardInterrupt:
             pool.terminate()
+            df.to_csv(f'Simulation_Data/two_level_15to1_simulations {datetime.now().strftime("%Y-%m-%d %H:%M")}.csv', mode='a', index=False, header=True)
             break
