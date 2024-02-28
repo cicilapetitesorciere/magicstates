@@ -1,6 +1,8 @@
 from definitions import kron, x, y, z, one, plusstate
 from mpmath import mp
 
+n_repetitions: int
+
 for n_repetitions in []:
     output = kron(*([one] * n_repetitions))
 
