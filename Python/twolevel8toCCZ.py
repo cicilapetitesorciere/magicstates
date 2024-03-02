@@ -220,7 +220,6 @@ def cost_of_two_level_8toccz(pphys: float | mpmath.mpf, dx: int, dz: int, dm: in
     return MagicStateFactory(
         name=f'(15-to-1)x(8-to-CCZ) with pphys={pphys}, dx={dx}, dz={dz}, dm={dm}, dx2={dx2}, dz2={dz2}, dm2={dm2}, nl1={nl1}',
         distilled_magic_state_error_rate=pout,
-        space=(0, 0),
         qubits=nqubits,
         distillation_time_in_cycles=ncycles,
         n_t_gates_produced_per_distillation=1,

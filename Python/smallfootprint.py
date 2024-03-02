@@ -14,6 +14,7 @@ from definitions import (
     ideal15to1,
 )
 from onelevel15to1 import one_level_15to1_state
+from magic_state_factory import MagicStateFactory
 
 
 # Calculates the output error and cost of the small-footprint 15-to-1 protocol
@@ -896,42 +897,11 @@ def cost_of_two_level_15to1_small_footprint(pphys, dx, dz, dm, dx2, dz2, dm2):
         + 2 * dm2 * dm2
     )
     ncycles = 15 * l1time / (1 - pfail2)
-    print(
-        "Small-footprint (15-to-1)x(15-to-1) with pphys=",
-        pphys,
-        ", dx=",
-        dx,
-        ", dz=",
-        dz,
-        ", dm=",
-        dm,
-        ", dx2=",
-        dx2,
-        ", dz2=",
-        dz2,
-        ", dm2=",
-        dm2,
-        sep="",
+    
+    return MagicStateFactory(
+        name=f'Small footprint (15-to-1)x(15-to-1) with pphys={pphys}, dx={dx}, dz={dz}, dm={dm}, dx2={dx2}, dz2={dz2}, dm2={dm2}',
+        distilled_magic_state_error_rate=pout,
+        qubits=nqubits,
+        distillation_time_in_cycles=ncycles,
+        n_t_gates_produced_per_distillation=1,
     )
-    print("Output error: ", "%.4g" % pout, sep="")
-    print("Failure probability: ", "%.3g" % pfail2, sep="")
-    print("Qubits: ", "%.0f" % nqubits, sep="")
-    print("Code cycles: ", "%.2f" % ncycles, sep="")
-    print("Space-time cost: ", "%.0f" % (nqubits * ncycles), " qubitcycles", sep="")
-    print(
-        "For a 100-qubit computation: ",
-        ("%.3f" % (nqubits * ncycles / 2 / reqdist1**3)),
-        "d^3 (d=",
-        reqdist1,
-        ")",
-        sep="",
-    )
-    print(
-        "For a 5000-qubit computation: ",
-        ("%.3f" % (nqubits * ncycles / 2 / reqdist2**3)),
-        "d^3 (d=",
-        reqdist2,
-        ")",
-        sep="",
-    )
-    print("")
