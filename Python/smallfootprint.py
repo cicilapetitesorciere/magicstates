@@ -398,52 +398,13 @@ def cost_of_one_level_15to1_small_footprint(pphys, dx, dz, dm):
     reqdist1 = int(2 * round(optimize.root(logerr1, 3, method="hybr").x[0] / 2) + 1)
     reqdist2 = int(2 * round(optimize.root(logerr2, 3, method="hybr").x[0] / 2) + 1)
 
-    # Print output error, failure probability, space cost, time cost and space-time cost
-    print(
-        "Small-footprint 15-to-1 with pphys=",
-        pphys,
-        ", dx=",
-        dx,
-        ", dz=",
-        dz,
-        ", dm=",
-        dm,
-        sep="",
+    return MagicStateFactory(
+        name=f'fmall footprint 15-to-1 with pphys={pphys}, dx={dx}, dz={dz}, dm={dm}',
+        distilled_magic_state_error_rate=float(pout),
+        qubits=2 * (2 * dx * (dx + 4 * dz) + dm),
+        distillation_time_in_cycles=float(12 * dm / (1 - pfail)),
+        n_t_gates_produced_per_distillation=1,
     )
-    print("Output error: ", "%.4g" % pout, sep="")
-    print("Failure probability: ", "%.3g" % pfail, sep="")
-    print("Qubits: ", 2 * (2 * dx * (dx + 4 * dz) + dm), sep="")
-    print("Code cycles: ", "%.2f" % (12 * dm / (1 - pfail)), sep="")
-    print(
-        "Space-time cost: ",
-        "%.0f" % (2 * (2 * dx * (dx + 4 * dz) + dm) * 12 * dm / (1 - pfail)),
-        " qubitcycles",
-        sep="",
-    )
-    print(
-        "For a 100-qubit computation: ",
-        (
-            "%.3f"
-            % ((2 * dx * (dx + 4 * dz) + dm) * 12 * dm / (1 - pfail) / reqdist1**3)
-        ),
-        "d^3 (d=",
-        reqdist1,
-        ")",
-        sep="",
-    )
-    print(
-        "For a 5000-qubit computation: ",
-        (
-            "%.3f"
-            % ((2 * dx * (dx + 4 * dz) + dm) * 12 * dm / (1 - pfail) / reqdist2**3)
-        ),
-        "d^3 (d=",
-        reqdist2,
-        ")",
-        sep="",
-    )
-    print("")
-
 
 # Calculates the output error and cost of the small-footprint (15-to-1)x(15-to-1) protocol
 # with a physical error rate pphys, level-1 distances dx, dz and dm,
@@ -455,7 +416,7 @@ def cost_of_two_level_15to1_small_footprint(pphys, dx, dz, dm, dx2, dz2, dm2):
     pm2 = plog(pphys, dm2)
 
     # Compute pl1, the output error of level-1 states with an added Z storage error
-    # to the output state from moving the level-1 state into the intermediate region
+    # to the output state from moving the level-1 state dispinto the intermediate region
     out = one_level_15to1_state(pphys, dx, dz, dm)
     pfail = 1 - trace(kron(one, projx, projx, projx, projx) * out).real
     
@@ -900,8 +861,8 @@ def cost_of_two_level_15to1_small_footprint(pphys, dx, dz, dm, dx2, dz2, dm2):
     
     return MagicStateFactory(
         name=f'Small footprint (15-to-1)x(15-to-1) with pphys={pphys}, dx={dx}, dz={dz}, dm={dm}, dx2={dx2}, dz2={dz2}, dm2={dm2}',
-        distilled_magic_state_error_rate=pout,
+        distilled_magic_state_error_rate=float(pout),
         qubits=nqubits,
-        distillation_time_in_cycles=ncycles,
+        distillation_time_in_cycles=float(ncycles),
         n_t_gates_produced_per_distillation=1,
     )

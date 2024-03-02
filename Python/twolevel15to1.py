@@ -377,8 +377,8 @@ def cost_of_two_level_15to1(pphys: float | mpmath.mpf, dx: int, dz: int, dm: int
 
     return MagicStateFactory(
         name=f'(15-to-1)x(15-to-1) with pphys={pphys}, dx={dx}, dz={dz}, dm={dm}, dx2={dx2}, dz2={dz2}, dm2={dm2}, nl1={nl1}',
-        distilled_magic_state_error_rate=pout,
+        distilled_magic_state_error_rate=float(pout),
         qubits=nqubits,
-        distillation_time_in_cycles=ncycles,
+        distillation_time_in_cycles=float(ncycles),
         n_t_gates_produced_per_distillation=1,
     )
