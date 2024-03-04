@@ -18,23 +18,38 @@ from definitions import (
 )
 from onelevel15to1 import one_level_15to1_state
 
+
 @lru_cache
 def one_level_15to1_state_memoized(pphys, dx, dz, dm):
     out = one_level_15to1_state(pphys, dx, dz, dm)
     pfail = (1 - trace(kron(one, projx, projx, projx, projx) * out)).real
 
-    outpostsel = (1 / (1 - pfail)) * kron(one, projx, projx, projx, projx) * out * kron(one, projx, projx, projx, projx).transpose_conj()
-    
+    outpostsel = (
+        (1 / (1 - pfail))
+        * kron(one, projx, projx, projx, projx)
+        * out
+        * kron(one, projx, projx, projx, projx).transpose_conj()
+    )
+
     pl1 = (1 - trace(outpostsel * ideal15to1)).real
 
     return pfail, pl1
 
-def cost_of_two_level_15to1(pphys: float | mpmath.mpf, dx: int, dz: int, dm: int, dx2: int, dz2: int, dm2: int, nl1: int) -> MagicStateFactory:
 
+def cost_of_two_level_15to1(
+    pphys: float | mpmath.mpf,
+    dx: int,
+    dz: int,
+    dm: int,
+    dx2: int,
+    dz2: int,
+    dm2: int,
+    nl1: int,
+) -> MagicStateFactory:
     """
     Calculates the output error and cost of the (15-to-1)x(15-to-1) protocol with a physical error rate pphys, level-1 distances dx, dz and dm, level-2 distances dx2, dz2 and dm2, using nl1 level-1 factories
     """
-    
+
     # Introduce shorthand notation for logical error rate with distances dx2/dz2/dm2
 
     pphys = mp.mpf(pphys)
@@ -350,7 +365,12 @@ def cost_of_two_level_15to1(pphys: float | mpmath.mpf, dx: int, dz: int, dm: int
     pfail2 = (1 - trace(kron(one, projx, projx, projx, projx) * out2)).real
 
     # Compute the density matrix of the post-selected output state, i.e., after projecting qubits 2-5 into |+>
-    outpostsel2 = (1 / (1 - pfail2)) * kron(one, projx, projx, projx, projx) * out2 * kron(one, projx, projx, projx, projx).transpose_conj()
+    outpostsel2 = (
+        (1 / (1 - pfail2))
+        * kron(one, projx, projx, projx, projx)
+        * out2
+        * kron(one, projx, projx, projx, projx).transpose_conj()
+    )
 
     # Compute level-2 output error from the infidelity between the post-selected state and the ideal output state
     pout = (1 - trace(outpostsel2 * ideal15to1)).real
@@ -376,7 +396,7 @@ def cost_of_two_level_15to1(pphys: float | mpmath.mpf, dx: int, dz: int, dm: int
     ncycles = 7.5 * l1time / (1 - pfail2)
 
     return MagicStateFactory(
-        name=f'(15-to-1)x(15-to-1) with pphys={pphys}, dx={dx}, dz={dz}, dm={dm}, dx2={dx2}, dz2={dz2}, dm2={dm2}, nl1={nl1}',
+        name=f"(15-to-1)x(15-to-1) with pphys={float(pphys)}, dx={dx}, dz={dz}, dm={dm}, dx2={dx2}, dz2={dz2}, dm2={dm2}, nl1={nl1}",
         distilled_magic_state_error_rate=float(pout),
         qubits=nqubits,
         distillation_time_in_cycles=float(ncycles),

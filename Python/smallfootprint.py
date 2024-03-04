@@ -1,3 +1,4 @@
+import mpmath
 from mpmath import mp
 from scipy import optimize
 from definitions import (
@@ -17,9 +18,15 @@ from onelevel15to1 import one_level_15to1_state
 from magic_state_factory import MagicStateFactory
 
 
-# Calculates the output error and cost of the small-footprint 15-to-1 protocol
-# with a physical error rate pphys and distances dx, dz and dm,
-def cost_of_one_level_15to1_small_footprint(pphys, dx, dz, dm):
+def cost_of_one_level_15to1_small_footprint(
+    pphys: float | mpmath.mpf, dx: int, dz: int, dm: int
+) -> MagicStateFactory:
+    """
+    Calculates the output error and cost of the small-footprint 15-to-1 protocol with a physical error rate pphys and distances dx, dz and dm,
+    """
+
+    pphys = mpmath.mpf(pphys)
+
     # Introduce shorthand notation for logical error rate with distances dx/dz/dm
     px = plog(pphys, dx)
     pz = plog(pphys, dz)
@@ -384,7 +391,12 @@ def cost_of_one_level_15to1_small_footprint(pphys, dx, dz, dm):
     pfail = 1 - trace(kron(one, projx, projx, projx, projx) * out).real
 
     # Compute the density matrix of the post-selected output state, i.e., after projecting qubits 2-5 into |+>
-    outpostsel = (1 / (1 - pfail)) * kron(one, projx, projx, projx, projx) * out * kron(one, projx, projx, projx, projx).transpose_conj()
+    outpostsel = (
+        (1 / (1 - pfail))
+        * kron(one, projx, projx, projx, projx)
+        * out
+        * kron(one, projx, projx, projx, projx).transpose_conj()
+    )
     # Compute output error from the infidelity between the post-selected state and the ideal output state
     pout = 1 - trace(outpostsel * ideal15to1).real
 
@@ -399,17 +411,23 @@ def cost_of_one_level_15to1_small_footprint(pphys, dx, dz, dm):
     reqdist2 = int(2 * round(optimize.root(logerr2, 3, method="hybr").x[0] / 2) + 1)
 
     return MagicStateFactory(
-        name=f'fmall footprint 15-to-1 with pphys={pphys}, dx={dx}, dz={dz}, dm={dm}',
+        name=f"fmall footprint 15-to-1 with pphys={float(pphys)}, dx={dx}, dz={dz}, dm={dm}",
         distilled_magic_state_error_rate=float(pout),
         qubits=2 * (2 * dx * (dx + 4 * dz) + dm),
         distillation_time_in_cycles=float(12 * dm / (1 - pfail)),
         n_t_gates_produced_per_distillation=1,
     )
 
-# Calculates the output error and cost of the small-footprint (15-to-1)x(15-to-1) protocol
-# with a physical error rate pphys, level-1 distances dx, dz and dm,
-# and level-2 distances dx2, dz2 and dm2
-def cost_of_two_level_15to1_small_footprint(pphys, dx, dz, dm, dx2, dz2, dm2):
+
+def cost_of_two_level_15to1_small_footprint(
+    pphys: float | mpmath.mpf, dx: int, dz: int, dm: int, dx2: int, dz2: int, dm2: int
+) -> MagicStateFactory:
+    """
+    Calculates the output error and cost of the small-footprint (15-to-1)x(15-to-1) protocol with a physical error rate `pphys`, level-1 distances `dx`, `dz` and `dm`, and level-2 distances `dx2`, `dz2` and `dm2`
+    """
+
+    pphys = mpmath.mpf(pphys)
+
     # Introduce shorthand notation for logical error rate with distances dx2/dz2/dm2
     px2 = plog(pphys, dx2)
     pz2 = plog(pphys, dz2)
@@ -419,9 +437,13 @@ def cost_of_two_level_15to1_small_footprint(pphys, dx, dz, dm, dx2, dz2, dm2):
     # to the output state from moving the level-1 state dispinto the intermediate region
     out = one_level_15to1_state(pphys, dx, dz, dm)
     pfail = 1 - trace(kron(one, projx, projx, projx, projx) * out).real
-    
-    outpostsel = (1 / (1 - pfail)) * kron(one, projx, projx, projx, projx) * out * kron(one, projx, projx, projx, projx).transpose_conj()
-  
+
+    outpostsel = (
+        (1 / (1 - pfail))
+        * kron(one, projx, projx, projx, projx)
+        * out
+        * kron(one, projx, projx, projx, projx).transpose_conj()
+    )
 
     pl1 = 1 - trace(outpostsel * ideal15to1).real + 5 * pm2 * dm2
 
@@ -835,7 +857,12 @@ def cost_of_two_level_15to1_small_footprint(pphys, dx, dz, dm, dx2, dz2, dm2):
     pfail2 = 1 - trace(kron(one, projx, projx, projx, projx) * out2).real
 
     # Compute the density matrix of the post-selected output state, i.e., after projecting qubits 2-5 into |+>
-    outpostsel2 = (1 / (1 - pfail2)) * kron(one, projx, projx, projx, projx) * out2 * kron(one, projx, projx, projx, projx).transpose_conj()
+    outpostsel2 = (
+        (1 / (1 - pfail2))
+        * kron(one, projx, projx, projx, projx)
+        * out2
+        * kron(one, projx, projx, projx, projx).transpose_conj()
+    )
 
     # Compute level-2 output error from the infidelity between the post-selected state and the ideal output state
     pout = 1 - trace(outpostsel2 * ideal15to1).real
@@ -858,9 +885,9 @@ def cost_of_two_level_15to1_small_footprint(pphys, dx, dz, dm, dx2, dz2, dm2):
         + 2 * dm2 * dm2
     )
     ncycles = 15 * l1time / (1 - pfail2)
-    
+
     return MagicStateFactory(
-        name=f'Small footprint (15-to-1)x(15-to-1) with pphys={pphys}, dx={dx}, dz={dz}, dm={dm}, dx2={dx2}, dz2={dz2}, dm2={dm2}',
+        name=f"Small footprint (15-to-1)x(15-to-1) with pphys={float(pphys)}, dx={dx}, dz={dz}, dm={dm}, dx2={dx2}, dz2={dz2}, dm2={dm2}",
         distilled_magic_state_error_rate=float(pout),
         qubits=nqubits,
         distillation_time_in_cycles=float(ncycles),

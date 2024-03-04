@@ -282,7 +282,9 @@ def one_level_15to1_state(
     return out
 
 
-def cost_of_one_level_15to1(pphys: float | mpmath.mpf, dx: int, dz: int, dm: int) -> MagicStateFactory:
+def cost_of_one_level_15to1(
+    pphys: float | mpmath.mpf, dx: int, dz: int, dm: int
+) -> MagicStateFactory:
     """
     Calculates the output error and cost of the 15-to-1 protocol with a physical error rate `pphys` and distances `dx`, `dz` and `dm`
     """
@@ -317,7 +319,7 @@ def cost_of_one_level_15to1(pphys: float | mpmath.mpf, dx: int, dz: int, dm: int
     reqdist2 = int(2 * round(optimize.root(logerr2, 3, method="hybr").x[0] / 2) + 1)
 
     return MagicStateFactory(
-        name=f'15-to-1 with pphys={pphys}, dx={dx}, dz={dz}, dm={dm}',
+        name=f"15-to-1 with pphys={float(pphys)}, dx={dx}, dz={dz}, dm={dm}",
         distilled_magic_state_error_rate=float(pout),
         qubits=2 * ((dx + 4 * dz) * 3 * dx + 2 * dm),
         distillation_time_in_cycles=float(6 * dm / (1 - pfail)),

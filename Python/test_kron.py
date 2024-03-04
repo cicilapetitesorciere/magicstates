@@ -8,7 +8,7 @@ for n_repetitions in []:
 
     for i in range(output.rows):
         for j in range(output.cols):
-            assert(output[i,j] == (1.0 if i == j else 0.0))
+            assert output[i, j] == (1.0 if i == j else 0.0)
 
 for n_repetitions in []:
     output = kron(*([x] * n_repetitions))
@@ -17,14 +17,13 @@ for n_repetitions in []:
 
     for i in range(output.rows):
         for j in range(output.cols):
-            assert(output[i, output.cols - 1 - j] == (1.0 if i == j else 0.0))
+            assert output[i, output.cols - 1 - j] == (1.0 if i == j else 0.0)
 
 
 for n_repetitions in []:
     output = kron(*([z] * n_repetitions))
 
     print(output)
-
 
     for i in range(output.rows):
         for j in range(output.cols):
@@ -38,16 +37,15 @@ for n_repetitions in []:
                     if b > i:
                         break
 
-                assert(output[i,i] == correct_value)
-                
+                assert output[i, i] == correct_value
+
             else:
-                assert(output[i, j] == 0)
+                assert output[i, j] == 0
 
 for n_repetitions in []:
     output = kron(*([z] * n_repetitions))
 
     print(output)
-
 
     for i in range(output.rows):
         for j in range(output.cols):
@@ -61,10 +59,10 @@ for n_repetitions in []:
                     if b > i:
                         break
 
-                assert(output[i,i] == correct_value)
-                
+                assert output[i, i] == correct_value
+
             else:
-                assert(output[i, j] == 0)
+                assert output[i, j] == 0
 
 
 for n_repetitions in []:
@@ -72,6 +70,6 @@ for n_repetitions in []:
 
     for i in range(output.rows):
         for j in range(output.cols):
-            assert(output[i,j] == (1.0 if i == j else 0.0))
+            assert output[i, j] == (1.0 if i == j else 0.0)
 
 print("Success!")
